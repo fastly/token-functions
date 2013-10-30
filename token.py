@@ -8,7 +8,7 @@ encodedkey = "RmFzdGx5IFRva2VuIFRlc3Q="
 interval = 60
 
 key = base64.b64decode(encodedkey)
-number = struct.pack('Q', int(time.time()) / interval)
+number = struct.pack('<Q', int(time.time()) / interval)
 digest = hmac.new(key, number, hashlib.sha256).digest()
 token = base64.b64encode(digest)
 

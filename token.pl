@@ -10,7 +10,7 @@ my $interval = 60;
  
 my $key = decode_base64($encodedkey);
  
-my $number = pack "Q", time/$interval;
+my $number = pack "Q<", time/$interval;
 my $token  = encode_base64(hmac_sha256($number, $key),'');
  
 my $response   = get("http://token.fastly.com/token");
