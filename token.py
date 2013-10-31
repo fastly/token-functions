@@ -13,8 +13,8 @@ digest = hmac.new(key, number, hashlib.sha256).digest()
 token = base64.b64encode(digest)
 
 response = urllib2.urlopen("http://token.fastly.com/token")
-validation = urllib2.urlopen("http://token.fastly.com?{}".format(token))
+validation = urllib2.urlopen("http://token.fastly.com?{0}".format(token))
 
-print "Your Token:   {}".format(token)
-print "Fastly Token: {}".format(response.read())
-print "Validation:   {}".format(validation.read())
+print "Your Token:   {0}".format(token)
+print "Fastly Token: {0}".format(response.read())
+print "Validation:   {0}".format(validation.read())
