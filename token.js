@@ -9,7 +9,7 @@ var key        = new Buffer(encodedkey, 'base64').toString('ascii');
 var time       = Math.floor(Date.now()/(interval*1000));
 var l          = (time & 0xffffffff00000000) >>32
 var r          = (time & 0x00000000ffffffff)
-var number     = new Buffer(jspack.Pack("<L<L", [r, l]), 'binary'); // "abab"; // pack "Q<", time/$interval;
+var number     = new Buffer(jspack.Pack("<L<L", [r, l]), 'binary');
 
 var token      = crypto.createHmac('SHA256', key).update(number).digest('base64');
 var response   = fetchUrl("/token");
