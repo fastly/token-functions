@@ -1,18 +1,4 @@
 <?
-$encodedkey = "RmFzdGx5IFRva2VuIFRlc3Q=";
-$interval = 60;
- 
-$key = base64_decode($encodedkey);
- 
-$number = pack64(intval(time()/$interval));
-$token  = base64_encode(hash_hmac('sha256', $number, $key, true));
-
-$response   = curl_get_contents("http://token.fastly.com/token");
-$validation = curl_get_contents("http://token.fastly.com?$token");
-
-print "Your Token:   $token\n";
-print "Fastly Token: $response\n";
-print "Validation:   $validation\n";
 
 function pack64($value) {
   $l = ($value & 0xffffffff00000000) >>32;
@@ -31,5 +17,20 @@ function curl_get_contents($url)
   curl_close($ch);
   return $data;
 }
+
+$encodedkey = "RmFzdGx5IFRva2VuIFRlc3Q=";
+$interval = 60;
+ 
+$key = base64_decode($encodedkey);
+ 
+$number = pack64(intval(time()/$interval));
+$token  = base64_encode(hash_hmac('sha256', $number, $key, true));
+
+$response   = curl_get_contents("http://token.fastly.com/token");
+$validation = curl_get_contents("http://token.fastly.com?$token");
+
+print "Your Token:   $token\n";
+print "Fastly Token: $response\n";
+print "Validation:   $validation\n";
 
 ?>
