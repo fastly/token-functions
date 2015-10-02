@@ -154,16 +154,16 @@ func main() {
     return
   }
 
-  token_lifetime := 1209600
+  tokenLifetime := 1209600
 
   path := "/foo/bar.html"
 
-  expiration := time.Now().Unix() + int64(token_lifetime)
+  expiration := time.Now().Unix() + int64(tokenLifetime)
 
-  string_to_sign := fmt.Sprint(path, strconv.FormatInt(expiration, 10))
+  stringToSign := fmt.Sprint(path, strconv.FormatInt(expiration, 10))
 
   h := hmac.New(sha1.New, key)
-  h.Write([]byte(string_to_sign))
+  h.Write([]byte(stringToSign))
   signature := hex.EncodeToString(h.Sum(nil))
 
   token := fmt.Sprint(strconv.FormatInt(expiration, 10), "_", signature)
