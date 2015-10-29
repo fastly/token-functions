@@ -16,10 +16,14 @@ Tokens give you the ability to create URLs that expire. If you only want to give
 The code that enables token auth should be placed in `vcl_recv`. This is an example:
 
 ```vcl
-  /* extract token signature and expiration */
-  set req.http.X-Token = urldecode(regsub(req.url, ".*token=([^&]+)(?:&|$).*", "\1"));
-  set req.http.X-Sig = regsub(req.http.X-Token, "^[^_]+_(.*)", "\1");
-  set req.http.X-Exp = regsub(req.http.X-Token, "^([^_]+)_.*", "\1");
+  /* make sure there is a token */
+  if (req.url !~ ".+\?.*token=(\d{10,11})_([^&]+)") {
+    error 403; 
+  }
+
+  /* extract token expiration and signature */
+  set req.http.X-Exp = re.group.1;
+  set req.http.X-Sig = re.group.2;
 
   /* validate signature */
   if (req.http.X-Sig == regsub(digest.hmac_sha1(digest.base64_decode("iqFPeN2u+Z0Lm5IrsKaOFKRqEU5Gw8ePtaEkHZWuD24="),
@@ -29,6 +33,7 @@ The code that enables token auth should be placed in `vcl_recv`. This is an exam
     if (time.is_after(now, std.integer2time(std.atoi(req.http.X-Exp)))) {
       error 410;
     }
+
   } else {
     error 403;
   }
