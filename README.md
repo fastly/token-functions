@@ -133,42 +133,39 @@ print("Token:   " . $token . "\n");
 ##### Go
 
 ```go
+// this example can be modified and run at https://play.golang.org/p/BYXqllJy_J
+
 package main
 
 import (
-  "crypto/hmac"
-  "crypto/sha1"
-  "encoding/base64"
-  "encoding/hex"
-  "fmt"
-  "net/url"
-  "strconv"
-  "time"
+    "crypto/hmac"
+    "crypto/sha1"
+    "encoding/base64"
+    "encoding/hex"
+    "fmt"
+    "time"
+)
+
+const (
+    encodedKey    = "iqFPeN2u+Z0Lm5IrsKaOFKRqEU5Gw8ePtaEkHZWuD24="
+    tokenLifetime = 14 * 24 * time.Hour
+    path          = "/foo/bar.html"
 )
 
 func main() {
-  key, err := base64.StdEncoding.DecodeString("iqFPeN2u+Z0Lm5IrsKaOFKRqEU5Gw8ePtaEkHZWuD24=")
+    key, err := base64.StdEncoding.DecodeString(encodedKey)
+    if err != nil {
+        fmt.Println("key in not in base64: ", err)
+        return
+    }
 
-  if err != nil {
-    fmt.Println("Key decoding error:", err)
-    return
-  }
+    expiration := time.Now().Add(tokenLifetime).Unix()
 
-  tokenLifetime := 1209600
+    h := hmac.New(sha1.New, key)
+    fmt.Fprintf(h, "%s%d", path, expiration)
+    signature := hex.EncodeToString(h.Sum(nil))
+    token := fmt.Sprintf("%d_%s", expiration, signature)
 
-  path := "/foo/bar.html"
-
-  expiration := time.Now().Unix() + int64(tokenLifetime)
-
-  stringToSign := fmt.Sprint(path, strconv.FormatInt(expiration, 10))
-
-  h := hmac.New(sha1.New, key)
-  h.Write([]byte(stringToSign))
-  signature := hex.EncodeToString(h.Sum(nil))
-
-  token := fmt.Sprint(strconv.FormatInt(expiration, 10), "_", signature)
-
-  fmt.Printf("Token: %s\n", url.QueryEscape(token))
+    fmt.Printf("Token: %s\n", token)
 }
-
 ```
