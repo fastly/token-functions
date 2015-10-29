@@ -39,7 +39,6 @@ The code that enables token auth should be placed in `vcl_recv`. This is an exam
   }
 
   /* cleanup variables */
-  unset req.http.X-Token;
   unset req.http.X-Sig;
   unset req.http.X-Exp;
 ```
