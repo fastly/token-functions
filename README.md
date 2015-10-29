@@ -2,6 +2,15 @@
 
 Tokens give you the ability to create URLs that expire. If you only want to give a particular user access to a link for a specific amount of time, you'll need tokens. They're commonly used to secure video assets, but you can create and validate signatures to be transferred in other ways, like cookies or authentication headers.
 
+# Table of Contents
+* [VCL](#vcl)
+* Code Examples
+ * [Python](#python)
+ * [Ruby](#ruby)
+ * [PHP](#php)
+ * [Go](#go)
+ * [C#](#c)
+
 #### VCL
 
 The code that enables token auth should be placed in `vcl_recv`. This is an example:
