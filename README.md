@@ -25,15 +25,11 @@ The code that enables token auth should be placed in `vcl_recv`. This is an exam
   if (req.http.X-Sig == regsub(digest.hmac_sha1(digest.base64_decode("iqFPeN2u+Z0Lm5IrsKaOFKRqEU5Gw8ePtaEkHZWuD24="),
   req.url.path req.http.X-Exp), "^0x", "")) {
 
-    /* use vcl time math to check expiration timestamp */
-    set req.http.X-Original-Grace = req.grace;
-    set req.grace = std.atoi(strftime({"%s"}, now));
-    set req.grace -= std.atoi(req.http.X-Exp);
-    
-    if (std.atoi(req.grace) > 0) {
+    /* check that expiration time has not elapsed */
+    if (time.is_after(now, std.integer2time(std.atoi(req.http.X-Exp)))) {
       error 410;
     }
-    
+
     /* clean up grace since we used it for time math */
     set req.grace = std.atoi(req.http.X-Original-Grace);
     unset req.http.X-Original-Grace;
@@ -46,6 +42,7 @@ The code that enables token auth should be placed in `vcl_recv`. This is an exam
   unset req.http.X-Token;
   unset req.http.X-Sig;
   unset req.http.X-Exp;
+
 ```
 
 This code expects to find a token in the `?token=` GET parameter. Tokens take the format of `[expiration]_[signature]` and look like this: `1441307151_4492f25946a2e8e1414a8bb53dab8a6ba1cf4615`. The full request URL would look like this: 
