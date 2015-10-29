@@ -169,3 +169,32 @@ func main() {
     fmt.Printf("Token: %s\n", token)
 }
 ```
+
+##### C♯
+
+```csharp
+// I've never written C# before. Apologies if this poor. --@stephenbasile
+
+using System;
+using System.Security.Cryptography;
+
+byte[] key = Convert.FromBase64String("iqFPeN2u+Z0Lm5IrsKaOFKRqEU5Gw8ePtaEkHZWuD24=");
+
+Int32 lifetime = 1209600;
+
+string path = "/foo/bar.html";
+
+Int32 expiration = (Int32)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
+
+expiration += lifetime;
+
+string string_to_sign = path + expiration.ToString();
+
+var encoding = new System.Text.UTF8Encoding();
+byte[] messageBytes = encoding.GetBytes(string_to_sign);
+using (var hmacsha1 = new HMACSHA1(key))
+{
+	byte[] hashmessage = hmacsha1.ComputeHash(messageBytes);
+	Console.WriteLine(expiration + "_" + BitConverter.ToString(hashmessage).Replace("-", string.Empty).ToLower());
+}
+```
