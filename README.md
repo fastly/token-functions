@@ -43,7 +43,7 @@ The code that enables token auth should be placed in `vcl_recv`. This is an exam
   unset req.http.X-Exp;
 ```
 
-> NOTE: Please generate your own key before using this code.
+> NOTE: Please generate your own key before using this code. Remove the brackets around the string and generate a new key using `openssl rand -base64 32`.
 
 This code expects to find a token in the `?token=` GET parameter. Tokens take the format of `[expiration]_[signature]` and look like this: `1441307151_4492f25946a2e8e1414a8bb53dab8a6ba1cf4615`. The full request URL would look like this: 
 
