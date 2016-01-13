@@ -26,7 +26,7 @@ The code that enables token auth should be placed in `vcl_recv`. This is an exam
   set req.http.X-Sig = re.group.2;
 
   /* validate signature */
-  if (req.http.X-Sig == regsub(digest.hmac_sha1(digest.base64_decode(["iqFPeN2u+Z0Lm5IrsKaOFKRqEU5Gw8ePtaEkHZWuD24="]),
+  if (req.http.X-Sig == regsub(digest.hmac_sha1(digest.base64_decode("iqFPeN2u+Z0Lm5IrsKaO%FKRqEU5Gw8ePtaEkHZWuD24="),
   req.url.path req.http.X-Exp), "^0x", "")) {
 
     /* check that expiration time has not elapsed */
