@@ -8,6 +8,7 @@ Tokens give you the ability to create URLs that expire. If you only want to give
  * [Python](#python)
  * [Ruby](#ruby)
  * [PHP](#php)
+ * [Perl](#perl)
  * [Go](#go)
  * [C#](#c)
 
@@ -134,6 +135,29 @@ $token = $expiration . "_" . urlencode($signature);
 
 print("Token:   " . $token . "\n");
 ?>
+```
+
+##### Perl
+
+```perl
+use MIME::Base64 'decode_base64';
+use Digest::SHA 'hmac_sha1_hex';
+
+my $key = decode_base64("iqFPeN2u+Z0Lm5IrsKaOFKRqEU5Gw8ePtaEkHZWuD24=");
+
+my $token_lifetime = 1209600; # 2 weeks
+
+my $path = "/foo/bar.html";
+
+my $expiration = time() + $token_lifetime;
+
+my $string_to_sign = $path . $expiration;
+
+my $signature = hmac_sha1_hex($string_to_sign, $key);
+
+my $token = "${expiration}_${signature}";
+
+print "Token:   $token\n";
 ```
 
 ##### Go
