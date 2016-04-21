@@ -8,6 +8,7 @@ Tokens give you the ability to create URLs that expire. If you only want to give
  * [Python](#python)
  * [Ruby](#ruby)
  * [PHP](#php)
+ * [Perl](#perl)
  * [Go](#go)
  * [C#](#c)
 
@@ -68,7 +69,6 @@ The client or web application will need to be able to generate tokens to authent
 import hmac
 from hashlib import sha1
 import time
-import urllib
 import base64
 
 key = base64.b64decode("iqFPeN2u+Z0Lm5IrsKaOFKRqEU5Gw8ePtaEkHZWuD24=")
@@ -85,7 +85,7 @@ digest = hmac.new(key, string_to_sign, sha1)
 
 signature = digest.hexdigest() 
 
-token = "{0}_{1}".format(expiration, urllib.quote(signature))
+token = "{0}_{1}".format(expiration, signature)
 
 print "Token:   " + token
 ```
@@ -94,7 +94,6 @@ print "Token:   " + token
 
 ```ruby
 require 'base64'
-require 'uri'
 require 'openssl' 
 
 key = Base64.decode64("iqFPeN2u+Z0Lm5IrsKaOFKRqEU5Gw8ePtaEkHZWuD24=")
@@ -109,7 +108,7 @@ string_to_sign = path+expiration.to_s
 
 signature = OpenSSL::HMAC.hexdigest('sha1', key, string_to_sign)
 
-token = expiration.to_s + "_" + URI.escape(signature)
+token = expiration.to_s + "_" + signature
 
 puts "Token:   " + token
 ```
@@ -130,10 +129,33 @@ $string_to_sign = $path . $expiration;
 
 $signature = hash_hmac('sha1', $string_to_sign, $key);
 
-$token = $expiration . "_" . urlencode($signature);
+$token = $expiration . "_" . $signature;
 
 print("Token:   " . $token . "\n");
 ?>
+```
+
+##### Perl
+
+```perl
+use MIME::Base64 'decode_base64';
+use Digest::SHA 'hmac_sha1_hex';
+
+my $key = decode_base64("iqFPeN2u+Z0Lm5IrsKaOFKRqEU5Gw8ePtaEkHZWuD24=");
+
+my $token_lifetime = 1209600; # 2 weeks
+
+my $path = "/foo/bar.html";
+
+my $expiration = time() + $token_lifetime;
+
+my $string_to_sign = $path . $expiration;
+
+my $signature = hmac_sha1_hex($string_to_sign, $key);
+
+my $token = "${expiration}_${signature}";
+
+print "Token:   $token\n";
 ```
 
 ##### Go
