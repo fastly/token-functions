@@ -1,0 +1,7 @@
+token.rs/
+build
+deps
+.fingerprint/
+target/
+token
+token.dSYM/
