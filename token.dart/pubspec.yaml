@@ -1,0 +1,9 @@
+name: token
+version: 0.1.0
+description: >
+  Implementation of Fastly's token function
+author: Simon Wistow <simon@fastly.com>
+dependencies:
+  http: '>=0.11.1'
+  base64_codec: '>=0.1.2'
+  cipher: '>=0.7.1'
