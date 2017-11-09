@@ -11,7 +11,7 @@ Tokens give you the ability to create URLs that expire. If you only want to give
  * [Perl](#perl)
  * [Go](#go)
  * [C#](#c)
- * [Javascript (Node.js)](#javascript)
+ * [Javascript (Node.js)](#javascript-nodejs)
 
 #### VCL
 
