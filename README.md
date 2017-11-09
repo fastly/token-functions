@@ -11,6 +11,7 @@ Tokens give you the ability to create URLs that expire. If you only want to give
  * [Perl](#perl)
  * [Go](#go)
  * [C#](#c)
+ * [Javascript (Node.js)](#javascript)
 
 #### VCL
 
@@ -226,3 +227,31 @@ using (var hmacsha1 = new HMACSHA1(key))
 	Console.WriteLine(expiration + "_" + BitConverter.ToString(hashmessage).Replace("-", string.Empty).ToLower());
 }
 ```
+##### Javascript (Node.js)
+
+```javascript
+// a similar example can be tested and remixed at https://javascript-token-fastly.glitch.me/
+
+var crypto = require('crypto');
+
+var path = "/foo/bar.html";
+
+var base64Key = 'iqFPeN2u+Z0Lm5IrsKaOFKRqEU5Gw8ePtaEkHZWuD24=';
+// The Buffer.from method decodes a base-64 encoded string. 
+// Attention: don't convert key to a String or it may not work
+var key = Buffer.from(base64Key, 'base64');
+
+// 1,209,600 seconds = 2 weeks
+var token_lifetime = 1209600; 
+// Date.now() gives the current time with a millisecond precision
+var expiration = Math.round(Date.now()/1000 + token_lifetime);
+
+var string_to_sign = path + String(expiration);
+
+// calculate the token and convert to HEX
+var signature = crypto.createHmac('sha1', key).update(string_to_sign).digest('hex');
+
+var token = String(expiration) + "_" + signature;
+
+console.log("Token:", token); 
+
