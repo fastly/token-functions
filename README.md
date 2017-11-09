@@ -254,4 +254,4 @@ var signature = crypto.createHmac('sha1', key).update(string_to_sign).digest('he
 var token = String(expiration) + "_" + signature;
 
 console.log("Token:", token); 
-
+```
