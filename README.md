@@ -33,7 +33,7 @@ if (req.restarts == 0) {
 
   /* validate signature */
   if (var.token_sig == regsub(digest.hmac_sha1(digest.base64_decode("YOUR%SECRET%KEY%IN%BASE64%HERE"),
-  req.url.path var.token_exp), "^0x", "")) {
+      req.url.path var.token_exp), "^0x", "")) {
 
     /* check that expiration time has not elapsed */
     if (time.is_after(now, std.integer2time(std.atoi(var.token_exp)))) {
