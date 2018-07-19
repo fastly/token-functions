@@ -17,31 +17,32 @@ Tokens give you the ability to create URLs that expire. If you only want to give
 The code that enables token auth should be placed in `vcl_recv`. This is an example:
 
 ```vcl
+/* only do this once per request */
+if (req.restarts == 0) {
+  declare local var.token_exp STRING;
+  declare local var.token_sig STRING;
+
   /* make sure there is a token */
   if (req.url !~ ".+\?.*token=(\d{10,11})_([^&]+)") {
-    error 403; 
-  }
-
-  /* extract token expiration and signature */
-  set req.http.X-Exp = re.group.1;
-  set req.http.X-Sig = re.group.2;
-
-  /* validate signature */
-  if (req.http.X-Sig == regsub(digest.hmac_sha1(digest.base64_decode("iqFPeN2u+Z0Lm5IrsKaO%FKRqEU5Gw8ePtaEkHZWuD24="),
-  req.url.path req.http.X-Exp), "^0x", "")) {
-
-    /* check that expiration time has not elapsed */
-    if (time.is_after(now, std.integer2time(std.atoi(req.http.X-Exp)))) {
-      error 410;
-    }
-
-  } else {
     error 403;
   }
 
-  /* cleanup variables */
-  unset req.http.X-Sig;
-  unset req.http.X-Exp;
+  /* extract token expiration and signature */
+  set var.token_exp = re.group.1;
+  set var.token_sig = re.group.2;
+
+  /* validate signature */
+  if (var.token_sig == regsub(digest.hmac_sha1(digest.base64_decode("YOUR%SECRET%KEY%IN%BASE64%HERE"),
+  req.url.path var.token_exp), "^0x", "")) {
+
+    /* check that expiration time has not elapsed */
+    if (time.is_after(now, std.integer2time(std.atoi(var.token_exp)))) {
+      error 410;
+    }
+  } else {
+    error 403;
+  }
+}
 ```
 
 > NOTE: Please generate your own key before using this code. The example key will intentionally cause an error if you use it. Please generate a new key with `openssl rand -base64 32`.
