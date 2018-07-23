@@ -32,7 +32,7 @@ if (req.restarts == 0) {
   set var.token_sig = re.group.2;
 
   /* validate signature */
-  if (var.token_sig == regsub(digest.hmac_sha1(digest.base64_decode("YOUR%SECRET%KEY%IN%BASE64%HERE"),
+  if (var.token_sig == regsub(digest.hmac_sha256(digest.base64_decode("YOUR%SECRET%KEY%IN%BASE64%HERE"),
       req.url.path var.token_exp), "^0x", "")) {
 
     /* check that expiration time has not elapsed */
@@ -45,13 +45,15 @@ if (req.restarts == 0) {
 }
 ```
 
-> NOTE: Please generate your own key before using this code. The example key will intentionally cause an error if you use it. Please generate a new key with `openssl rand -base64 32`.
+> NOTE: Please generate your own key before using this code. The example key will intentionally cause an error if you use it. Also, due to limitations in VCL, the binary form of the key should not contain any NUL (0x00) bytes. Please generate a new key with one of the following commandlines:
+> Linux: `while (b=`openssl rand -base64 32` ; echo $b; echo $b | base64 -d | hd | grep " 00 " > /dev/null); do :; done | tail -1`
+> OSX: `while (b=`openssl rand -base64 32` ; echo $b; echo $b | base64 -D | hexdump | grep " 00 " > /dev/null); do :; done | tail -1`
 
-This code expects to find a token in the `?token=` GET parameter. Tokens take the format of `[expiration]_[signature]` and look like this: `1441307151_4492f25946a2e8e1414a8bb53dab8a6ba1cf4615`. The full request URL would look like this: 
+This code expects to find a token in the `?token=` GET parameter. Tokens take the format of `[expiration]_[signature]` and look like this: `1533249205_12f5b21620c2ceae16233f3b9504d6fbf42e9aad8503ed95be0bfb5f96cf3828`. The full request URL would look like this: 
 
-`http://www.example.com/foo/bar.html?token=1441307151_4492f25946a2e8e1414a8bb53dab8a6ba1cf4615`.
+`http://www.example.com/foo/bar.html?token=1533249205_12f5b21620c2ceae16233f3b9504d6fbf42e9aad8503ed95be0bfb5f96cf3828`.
 
-The key found in `digest.hmac_sha1` can be any string. This one was generated with the command `openssl rand -base64 32`.
+The key used in `digest.hmac_sha256` can be any string, but it is recommended to use base64 encoded random data as described in the note above.
 
 The VCL checks for two things:
 
@@ -68,11 +70,11 @@ The client or web application will need to be able to generate tokens to authent
 
 ```python
 import hmac
-from hashlib import sha1
+from hashlib import sha256
 import time
 import base64
 
-key = base64.b64decode("iqFPeN2u+Z0Lm5IrsKaOFKRqEU5Gw8ePtaEkHZWuD24=")
+key = base64.b64decode("YOUR%SECRET%KEY%IN%BASE64%HERE")
 
 token_lifetime = 1209600 # 2 weeks
 
@@ -82,7 +84,7 @@ expiration = int(time.time()) + token_lifetime
 
 string_to_sign = "{0}{1}".format(path,expiration)
 
-digest = hmac.new(key, string_to_sign, sha1)
+digest = hmac.new(key, string_to_sign, sha256)
 
 signature = digest.hexdigest() 
 
@@ -97,7 +99,7 @@ print "Token:   " + token
 require 'base64'
 require 'openssl' 
 
-key = Base64.decode64("iqFPeN2u+Z0Lm5IrsKaOFKRqEU5Gw8ePtaEkHZWuD24=")
+key = Base64.decode64("YOUR%SECRET%KEY%IN%BASE64%HERE")
 
 token_lifetime = 1209600 # 2 weeks
 
@@ -107,7 +109,7 @@ expiration = Time.now.to_i + token_lifetime
 
 string_to_sign = path+expiration.to_s
 
-signature = OpenSSL::HMAC.hexdigest('sha1', key, string_to_sign)
+signature = OpenSSL::HMAC.hexdigest('sha256', key, string_to_sign)
 
 token = expiration.to_s + "_" + signature
 
@@ -118,7 +120,7 @@ puts "Token:   " + token
 
 ```php
 <?php
-$key = base64_decode("iqFPeN2u+Z0Lm5IrsKaOFKRqEU5Gw8ePtaEkHZWuD24=");
+$key = base64_decode("YOUR%SECRET%KEY%IN%BASE64%HERE");
  
 $token_lifetime = 1209600; # 2 weeks
 
@@ -128,7 +130,7 @@ $expiration = time() + $token_lifetime;
 
 $string_to_sign = $path . $expiration;
 
-$signature = hash_hmac('sha1', $string_to_sign, $key);
+$signature = hash_hmac('sha256', $string_to_sign, $key);
 
 $token = $expiration . "_" . $signature;
 
@@ -140,9 +142,9 @@ print("Token:   " . $token . "\n");
 
 ```perl
 use MIME::Base64 'decode_base64';
-use Digest::SHA 'hmac_sha1_hex';
+use Digest::SHA 'hmac_sha256_hex';
 
-my $key = decode_base64("iqFPeN2u+Z0Lm5IrsKaOFKRqEU5Gw8ePtaEkHZWuD24=");
+my $key = decode_base64("YOUR%SECRET%KEY%IN%BASE64%HERE");
 
 my $token_lifetime = 1209600; # 2 weeks
 
@@ -152,7 +154,7 @@ my $expiration = time() + $token_lifetime;
 
 my $string_to_sign = $path . $expiration;
 
-my $signature = hmac_sha1_hex($string_to_sign, $key);
+my $signature = hmac_sha256_hex($string_to_sign, $key);
 
 my $token = "${expiration}_${signature}";
 
@@ -168,7 +170,7 @@ package main
 
 import (
     "crypto/hmac"
-    "crypto/sha1"
+    "crypto/sha256"
     "encoding/base64"
     "encoding/hex"
     "fmt"
@@ -176,7 +178,7 @@ import (
 )
 
 const (
-    encodedKey    = "iqFPeN2u+Z0Lm5IrsKaOFKRqEU5Gw8ePtaEkHZWuD24="
+    encodedKey    = "YOUR%SECRET%KEY%IN%BASE64%HERE"
     tokenLifetime = 14 * 24 * time.Hour
     path          = "/foo/bar.html"
 )
@@ -190,7 +192,7 @@ func main() {
 
     expiration := time.Now().Add(tokenLifetime).Unix()
 
-    h := hmac.New(sha1.New, key)
+    h := hmac.New(sha256.New, key)
     fmt.Fprintf(h, "%s%d", path, expiration)
     signature := hex.EncodeToString(h.Sum(nil))
     token := fmt.Sprintf("%d_%s", expiration, signature)
@@ -207,23 +209,32 @@ func main() {
 using System;
 using System.Security.Cryptography;
 
-byte[] key = Convert.FromBase64String("iqFPeN2u+Z0Lm5IrsKaOFKRqEU5Gw8ePtaEkHZWuD24=");
-
-Int32 lifetime = 1209600;
-
-string path = "/foo/bar.html";
-
-Int32 expiration = (Int32)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
-
-expiration += lifetime;
-
-string string_to_sign = path + expiration.ToString();
-
-var encoding = new System.Text.UTF8Encoding();
-byte[] messageBytes = encoding.GetBytes(string_to_sign);
-using (var hmacsha1 = new HMACSHA1(key))
+namespace FastlyToken
 {
-	byte[] hashmessage = hmacsha1.ComputeHash(messageBytes);
-	Console.WriteLine(expiration + "_" + BitConverter.ToString(hashmessage).Replace("-", string.Empty).ToLower());
+  class Token
+  {
+    static void Main(string[] args)
+    {
+      byte[] key = Convert.FromBase64String("YOUR%SECRET%KEY%IN%BASE64%HERE");
+
+      Int32 lifetime = 1209600;
+
+      string path = "/foo/bar.html";
+
+      Int32 expiration = (Int32)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
+
+      expiration += lifetime;
+
+      string string_to_sign = path + expiration.ToString();
+
+      var encoding = new System.Text.UTF8Encoding();
+      byte[] messageBytes = encoding.GetBytes(string_to_sign);
+      using (var hmacsha256 = new HMACSHA256(key))
+      {
+        byte[] hashmessage = hmacsha256.ComputeHash(messageBytes);
+        Console.WriteLine(expiration + "_" + BitConverter.ToString(hashmessage).Replace("-", string.Empty).ToLower());
+      }
+    }
+  }
 }
 ```
