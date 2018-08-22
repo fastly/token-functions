@@ -46,8 +46,8 @@ if (req.restarts == 0) {
 ```
 
 > NOTE: Please generate your own key before using this code. The example key will intentionally cause an error if you use it. Also, due to limitations in VCL, the binary form of the key should not contain any NUL (0x00) bytes. Please generate a new key with one of the following commandlines:
-> Linux: `while (b=`openssl rand -base64 32` ; echo $b; echo $b | base64 -d | hd | grep " 00 " > /dev/null); do :; done | tail -1`
-> OSX: `while (b=`openssl rand -base64 32` ; echo $b; echo $b | base64 -D | hexdump | grep " 00 " > /dev/null); do :; done | tail -1`
+> Linux: `while (b=$(openssl rand -base64 32) ; echo $b; echo $b | base64 -d | hd | grep " 00 " > /dev/null); do :; done | tail -1`
+> OSX: `while (b=$(openssl rand -base64 32) ; echo $b; echo $b | base64 -D | hexdump | grep " 00 " > /dev/null); do :; done | tail -1`
 
 This code expects to find a token in the `?token=` GET parameter. Tokens take the format of `[expiration]_[signature]` and look like this: `1533249205_12f5b21620c2ceae16233f3b9504d6fbf42e9aad8503ed95be0bfb5f96cf3828`. The full request URL would look like this: 
 
