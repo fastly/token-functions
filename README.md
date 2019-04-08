@@ -14,50 +14,9 @@ Tokens give you the ability to create URLs that expire. If you only want to give
 
 #### VCL
 
-The code that enables token auth should be placed in `vcl_recv`. This is an example:
-
-```vcl
-  /* make sure there is a token */
-  if (req.url !~ ".+\?.*token=(\d{10,11})_([^&]+)") {
-    error 403; 
-  }
-
-  /* extract token expiration and signature */
-  set req.http.X-Exp = re.group.1;
-  set req.http.X-Sig = re.group.2;
-
-  /* validate signature */
-  if (req.http.X-Sig == regsub(digest.hmac_sha1(digest.base64_decode("iqFPeN2u+Z0Lm5IrsKaO%FKRqEU5Gw8ePtaEkHZWuD24="),
-  req.url.path req.http.X-Exp), "^0x", "")) {
-
-    /* check that expiration time has not elapsed */
-    if (time.is_after(now, std.integer2time(std.atoi(req.http.X-Exp)))) {
-      error 410;
-    }
-
-  } else {
-    error 403;
-  }
-
-  /* cleanup variables */
-  unset req.http.X-Sig;
-  unset req.http.X-Exp;
-```
-
-> NOTE: Please generate your own key before using this code. The example key will intentionally cause an error if you use it. Please generate a new key with `openssl rand -base64 32`.
-
-This code expects to find a token in the `?token=` GET parameter. Tokens take the format of `[expiration]_[signature]` and look like this: `1441307151_4492f25946a2e8e1414a8bb53dab8a6ba1cf4615`. The full request URL would look like this: 
-
-`http://www.example.com/foo/bar.html?token=1441307151_4492f25946a2e8e1414a8bb53dab8a6ba1cf4615`.
-
-The key found in `digest.hmac_sha1` can be any string. This one was generated with the command `openssl rand -base64 32`.
-
-The VCL checks for two things:
-
- 1. Is the current time greater than the expiration time specified in the token?
- 2. Does our signature match the signature of the token?
-
-If the signature is invalid, Varnish will return a 403. If the signature is valid but the expiration time has elapsed, Varnish will return a 410. The different response codes are helpful for debugging (and also "more correct"). It is not possible for a malicious user to modify the expiration time of their token--if they did the signature would no longer match. 
+The VCL code that enables token authentication is described in [Enabling
+URL token
+validation](https://docs.fastly.com/guides/tutorials/enabling-url-token-validation).
 
 #### Client Side Scripts
 
