@@ -3,21 +3,20 @@
 Tokens give you the ability to create URLs that expire. If you only want to give a particular user access to a link for a specific amount of time, you'll need tokens. They're commonly used to secure video assets, but you can create and validate signatures to be transferred in other ways, like cookies or authentication headers.
 
 #### Table of Contents
-* [VCL](#vcl)
-* Code Examples
- * [Python](#python)
- * [Ruby](#ruby)
- * [PHP](#php)
- * [Perl](#perl)
- * [Go](#go)
- * [C#](#c)
- * [Java](#java)
+- How to enable Token Authentication feature
+  * [VCL](#vcl)  
+- Code Examples
+  * [Python](#python)
+  * [Ruby](#ruby)
+  * [PHP](#php)
+  * [Perl](#perl)
+  * [Go](#go)
+  * [C#](#c)
+  * [Java](#java)
 
 #### VCL
 
-The VCL code that enables token authentication is described in [Enabling
-URL token
-validation](https://docs.fastly.com/guides/tutorials/enabling-url-token-validation).
+The VCL code that enables token authentication is described in [Enabling URL token validation](https://docs.fastly.com/guides/tutorials/enabling-url-token-validation).
 
 #### Client Side Scripts
 
