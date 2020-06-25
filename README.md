@@ -4,7 +4,9 @@ Tokens give you the ability to create URLs that expire. If you only want to give
 
 #### Table of Contents
 - How to enable Token Authentication feature
-  * [VCL](#vcl)  
+  * [VCL](#vcl)
+- How to use
+  * [Usage](#usage)
 - Code Examples
   * [Python](#python)
   * [Ruby](#ruby)
@@ -17,6 +19,18 @@ Tokens give you the ability to create URLs that expire. If you only want to give
 #### VCL
 
 The VCL code that enables token authentication is described in [Enabling URL token validation](https://docs.fastly.com/guides/tutorials/enabling-url-token-validation).
+
+#### Usage
+- Make sure both the VCL and client side script use the same key
+  * Change this in VCL: "YOUR%SECRET%KEY%IN%BASE64%HERE" to match your client side script
+  * Change this in Python: key = base64.b64decode("iqFPeN2u+Z0Lm5IrsKaOFKRqEU5Gw8ePtaEkHZWuD24=")
+- Change the following parameters, if needed
+  * In Python: "token_lifetime" and "path"
+    * If you change the "path", make sure you verify the VCL: req.url.path + var.token_expiration
+- Run your Python code to get your token
+  * Example: 1536399430_a6cbe4fab2f574d4d58436fa4b44bdbf765b26741
+- Test the token
+  * https://{your_fastly_domain}/{file}?token=1536399430_a6cbe4fab2f574d4d58436fa4b44bdbf765b26741
 
 #### Client Side Scripts
 
