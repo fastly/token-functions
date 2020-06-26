@@ -54,13 +54,13 @@ expiration = int(time.time()) + token_lifetime
 
 string_to_sign = "{0}{1}".format(path,expiration)
 
-digest = hmac.new(key, string_to_sign, sha1)
+digest = hmac.new(key, string_to_sign.encode('utf-8'), sha1)
 
 signature = digest.hexdigest() 
 
 token = "{0}_{1}".format(expiration, signature)
 
-print "Token:   " + token
+print("Token:   %s" % token)
 ```
 
 ##### Ruby
