@@ -313,9 +313,6 @@ public class token {
 ##### Rust
 
 ```
-extern crate base64;
-extern crate hmacsha1;
-
 use std::time::{SystemTime};
 use hmacsha1::{hmac_sha1};
 
