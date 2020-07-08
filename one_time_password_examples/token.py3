@@ -4,7 +4,6 @@ import time
 import urllib.request
 import struct
 
-
 encodedkey = "RmFzdGx5IFRva2VuIFRlc3Q="
 interval = 60
 
