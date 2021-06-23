@@ -11,8 +11,7 @@
 import java.security.SignatureException;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import sun.misc.BASE64Encoder;
-import sun.misc.BASE64Decoder;
+import java.util.Base64;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.io.BufferedReader;
@@ -21,7 +20,6 @@ import java.io.InputStreamReader;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLEncoder;
 
 
 
@@ -36,7 +34,7 @@ public class token {
         String token;
         try {
 
-            byte[] key  = new sun.misc.BASE64Decoder().decodeBuffer(encodedKey);
+            byte[] key  = Base64.getDecoder().decode(encodedKey);
             long number  = System.currentTimeMillis()/(interval*1000);
             byte [] data = unpack64(number);
 
@@ -46,7 +44,7 @@ public class token {
             mac.init(signingKey);
 
             byte[] rawHmac = mac.doFinal(data);
-            token = new BASE64Encoder().encode(rawHmac);
+            token = Base64.getEncoder().encodeToString(rawHmac);
 
         } catch (Exception e) {
             throw new SignatureException("Failed to generate HMAC : " + e.getMessage());
