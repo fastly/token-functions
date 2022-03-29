@@ -3,62 +3,37 @@
 Tokens give you the ability to create URLs that expire. If you only want to give a particular user access to a link for a specific amount of time, you'll need tokens. They're commonly used to secure video assets, but you can create and validate signatures to be transferred in other ways, like cookies or authentication headers.
 
 #### Table of Contents
-* [VCL](#vcl)
-* Code Examples
- * [Python](#python)
- * [Ruby](#ruby)
- * [PHP](#php)
- * [Perl](#perl)
- * [Go](#go)
- * [C#](#c)
- * [Javascript (Node.js)](#javascript-nodejs)
+
+- How to enable Token Authentication feature
+  * [VCL](#vcl)
+- How to use
+  * [Usage](#usage)
+- Code Examples
+  * [Python](#python)
+  * [Ruby](#ruby)
+  * [PHP](#php)
+  * [Perl](#perl)
+  * [Go](#go)
+  * [C#](#c)
+  * [Java](#java)
+  * [Rust](#rust)
+  * [Javascript (Node.js)](#javascript-nodejs)
 
 #### VCL
 
-The code that enables token auth should be placed in `vcl_recv`. This is an example:
+The VCL code that enables token authentication is described in [Enabling URL token validation](https://docs.fastly.com/guides/tutorials/enabling-url-token-validation).
 
-```vcl
-  /* make sure there is a token */
-  if (req.url !~ ".+\?.*token=(\d{10,11})_([^&]+)") {
-    error 403; 
-  }
-
-  /* extract token expiration and signature */
-  set req.http.X-Exp = re.group.1;
-  set req.http.X-Sig = re.group.2;
-
-  /* validate signature */
-  if (req.http.X-Sig == regsub(digest.hmac_sha1(digest.base64_decode("iqFPeN2u+Z0Lm5IrsKaO%FKRqEU5Gw8ePtaEkHZWuD24="),
-  req.url.path req.http.X-Exp), "^0x", "")) {
-
-    /* check that expiration time has not elapsed */
-    if (time.is_after(now, std.integer2time(std.atoi(req.http.X-Exp)))) {
-      error 410;
-    }
-
-  } else {
-    error 403;
-  }
-
-  /* cleanup variables */
-  unset req.http.X-Sig;
-  unset req.http.X-Exp;
-```
-
-> NOTE: Please generate your own key before using this code. The example key will intentionally cause an error if you use it. Please generate a new key with `openssl rand -base64 32`.
-
-This code expects to find a token in the `?token=` GET parameter. Tokens take the format of `[expiration]_[signature]` and look like this: `1441307151_4492f25946a2e8e1414a8bb53dab8a6ba1cf4615`. The full request URL would look like this: 
-
-`http://www.example.com/foo/bar.html?token=1441307151_4492f25946a2e8e1414a8bb53dab8a6ba1cf4615`.
-
-The key found in `digest.hmac_sha1` can be any string. This one was generated with the command `openssl rand -base64 32`.
-
-The VCL checks for two things:
-
- 1. Is the current time greater than the expiration time specified in the token?
- 2. Does our signature match the signature of the token?
-
-If the signature is invalid, Varnish will return a 403. If the signature is valid but the expiration time has elapsed, Varnish will return a 410. The different response codes are helpful for debugging (and also "more correct"). It is not possible for a malicious user to modify the expiration time of their token--if they did the signature would no longer match. 
+#### Usage
+- Make sure both the VCL and client side script use the same key
+  * Change this in VCL: "YOUR%SECRET%KEY%IN%BASE64%HERE" to match your client side script
+  * Change this in Python: key = base64.b64decode("iqFPeN2u+Z0Lm5IrsKaOFKRqEU5Gw8ePtaEkHZWuD24=")
+- Change the following parameters, if needed
+  * In Python: "token_lifetime" and "path"
+    * If you change the "path", make sure you verify the VCL: req.url.path + var.token_expiration
+- Run your Python code to get your token
+  * Example: 1536399430_a6cbe4fab2f574d4d58436fa4b44bdbf765b26741
+- Test the token
+  * https://{your_fastly_domain}/{file}?token=1536399430_a6cbe4fab2f574d4d58436fa4b44bdbf765b26741
 
 #### Client Side Scripts
 
@@ -82,13 +57,13 @@ expiration = int(time.time()) + token_lifetime
 
 string_to_sign = "{0}{1}".format(path,expiration)
 
-digest = hmac.new(key, string_to_sign, sha1)
+digest = hmac.new(key, string_to_sign.encode('utf-8'), sha1)
 
 signature = digest.hexdigest() 
 
 token = "{0}_{1}".format(expiration, signature)
 
-print "Token:   " + token
+print("Token:   %s" % token)
 ```
 
 ##### Ruby
@@ -227,6 +202,139 @@ using (var hmacsha1 = new HMACSHA1(key))
 	Console.WriteLine(expiration + "_" + BitConverter.ToString(hashmessage).Replace("-", string.Empty).ToLower());
 }
 ```
+
+##### Java
+
+```
+/***
+ *
+ * Compile with:
+ * javac token.java
+ *
+ * Run with:
+ * java token
+ * 
+ ***/
+
+import java.security.SignatureException;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import java.util.Base64;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+
+
+
+public class token {
+    private static final String HMAC_SHA256_ALGORITHM = "HmacSHA256";
+
+    public static void main(String[] args) throws Exception {
+        String encodedKey = "RmFzdGx5IFRva2VuIFRlc3Q=";
+        int    interval   = 60;
+
+        String token;
+        try {
+
+            byte[] key  = Base64.getDecoder().decode(encodedKey);
+            long number  = System.currentTimeMillis()/(interval*1000);
+            byte [] data = unpack64(number);
+
+            SecretKeySpec signingKey = new SecretKeySpec(key, HMAC_SHA256_ALGORITHM);
+
+            Mac mac = Mac.getInstance(HMAC_SHA256_ALGORITHM);
+            mac.init(signingKey);
+
+            byte[] rawHmac = mac.doFinal(data);
+            token = Base64.getEncoder().encodeToString(rawHmac);
+
+        } catch (Exception e) {
+            throw new SignatureException("Failed to generate HMAC : " + e.getMessage());
+        }
+
+        String response   = getUrl("http://token.fastly.com/token");
+        String validation = getUrl("http://token.fastly.com?"+token);
+
+        System.out.println("Your Token:   "+token);
+        System.out.println("Fastly Token: "+response);
+        System.out.println("Validation:   "+validation);
+        
+       }
+       
+       public static byte[] unpack64(long number) {
+           ByteBuffer bb = ByteBuffer.allocate(8);
+           bb.order(ByteOrder.LITTLE_ENDIAN);
+           bb.putLong(number);
+           return bb.array();
+       }
+
+       public static String getUrl(String urlStr) throws Exception {
+           URL url = new URL(urlStr);
+           HttpURLConnection connection = null;
+           BufferedReader reader = null;
+           InputStream is = null;
+
+           try {
+               connection = (HttpURLConnection) url.openConnection();
+               is = connection.getInputStream();
+           }  catch (IOException io) {
+               is = connection.getErrorStream();
+           }
+
+           try {
+               reader = new BufferedReader(new InputStreamReader(is));
+               StringBuilder stringBuilder = new StringBuilder();
+
+
+               String line = null;
+               while ((line = reader.readLine()) != null) {
+                   stringBuilder.append(line + "\n");
+               }
+               stringBuilder.setLength(stringBuilder.length() - 1);
+               return stringBuilder.toString();
+           } finally {
+               if (reader != null)
+                   reader.close();
+           }
+
+       }
+
+
+}
+```
+
+
+##### Rust
+
+```
+use std::time::{SystemTime};
+use hmacsha1::{hmac_sha1};
+
+fn main() {
+    let key = base64::decode("iqFPeN2u+Z0Lm5IrsKaOFKRqEU5Gw8ePtaEkHZWuD24=").unwrap();
+
+    let token_lifetime = 1209600; // 2 weeks
+
+    let path = "/foo/bar.html";
+
+    let expiration = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs() + token_lifetime;
+
+    let string_to_sign = format!("{}{}", path, expiration);
+
+    let signature = hmac_sha1(&key, string_to_sign.as_bytes());
+    let sighex: String = signature.iter().map(|s| format!("{:02x?}", s)).collect();       
+
+    let token = format!("{}_{}", expiration, sighex);
+    println!("token     : {}", token);
+}
+```
+
 ##### Javascript (Node.js)
 
 ```javascript
